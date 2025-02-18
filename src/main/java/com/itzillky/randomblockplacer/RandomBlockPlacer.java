@@ -42,7 +42,9 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 @Mod(RandomBlockPlacer.MODID)
 public class RandomBlockPlacer {
@@ -81,14 +83,17 @@ public class RandomBlockPlacer {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        int randomSlot = random.nextInt(VALID_SLOTS.length);
-        if (!(mc.player.getInventory().getItem(randomSlot).getItem() instanceof BlockItem)) {
-            Minecraft.getInstance().player.displayClientMessage(
-                    Component.literal("Random Hotbar Item is not a block!"),
-                    false
-            );
+        List<Integer> blockSlots = IntStream.range(0, 9)
+                .filter(i -> mc.player.getInventory().getItem(i).getItem() instanceof BlockItem)
+                .boxed()
+                .toList();
+
+        if (blockSlots.isEmpty()) {
+            mc.player.displayClientMessage(Component.literal("No blocks found in hotbar!"), false);
             return;
         }
+
+        int randomSlot = blockSlots.get(random.nextInt(blockSlots.size()));
         mc.player.getInventory().selected = randomSlot;
     }
 
